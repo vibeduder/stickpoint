@@ -67,6 +67,9 @@ Name: "startup"; \
 ; The compiled executable.  Adjust the path if your CMake build directory
 ; or configuration name differs.
 Source: "{#AppBin}"; DestDir: "{app}"; Flags: ignoreversion
+; Runtime assets must be installed next to the executable so build_image_path()
+; can resolve assets\controllers\... from the application directory.
+Source: "assets\*"; DestDir: "{app}\assets"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 ; ---- Start Menu shortcuts -------------------------------------------------
 
