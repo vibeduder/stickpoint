@@ -1,0 +1,11 @@
+// StickPoint — Windows resource file
+//
+// Embeds the application icon so it appears on the .exe file,
+// in the Start Menu shortcut, and can be loaded at runtime for
+// the tray icon and popup window.
+
+#include <windows.h>
+
+// ID 1 is the conventional first application icon.
+// The shell uses the lowest-numbered ICON resource as the file icon.
+1 ICON "../assets/icon.ico"

@@ -152,12 +152,22 @@ bool tray_init(HINSTANCE hInst, HWND hwnd_msg)
 {
     s_hwnd_msg = hwnd_msg;
 
+    /* Load icon sizes for the popup window (32×32 normal, 16×16 small). */
+    HICON hIconBig   = (HICON)LoadImageA(hInst, MAKEINTRESOURCEA(1),
+                                         IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
+    HICON hIconSmall = (HICON)LoadImageA(hInst, MAKEINTRESOURCEA(1),
+                                         IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
+    if (!hIconBig)   hIconBig   = LoadIconA(NULL, IDI_APPLICATION);
+    if (!hIconSmall) hIconSmall = LoadIconA(NULL, IDI_APPLICATION);
+
     /* Register the popup window class. */
     WNDCLASSEXA wc  = {0};
     wc.cbSize        = sizeof(wc);
     wc.lpfnWndProc   = PopupWndProc;
     wc.hInstance     = hInst;
     wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+    wc.hIcon         = hIconBig;
+    wc.hIconSm       = hIconSmall;
     wc.lpszClassName = "StickPointPopup";
     if (!RegisterClassExA(&wc))
         return false;
@@ -206,7 +216,16 @@ bool tray_init(HINSTANCE hInst, HWND hwnd_msg)
     s_nid.uID              = 1;
     s_nid.uFlags           = NIF_ICON | NIF_MESSAGE | NIF_TIP;
     s_nid.uCallbackMessage = WM_TRAYICON;
-    s_nid.hIcon            = LoadIconA(NULL, IDI_APPLICATION);
+    /*
+     * Load the 16×16 variant of the embedded application icon for the tray.
+     * LoadImage with LR_DEFAULTSIZE picks the 16×16 copy from the ICO
+     * resource (the shell requests exactly 16×16 for the notification area).
+     * Falls back to the generic app icon if the resource is missing.
+     */
+    s_nid.hIcon = (HICON)LoadImageA(hInst, MAKEINTRESOURCEA(1),
+                                    IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
+    if (!s_nid.hIcon)
+        s_nid.hIcon = LoadIconA(NULL, IDI_APPLICATION);
     strncpy(s_nid.szTip, "StickPoint \xe2\x80\x94 No controller",
             sizeof(s_nid.szTip) - 1);
 

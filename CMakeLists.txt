@@ -16,6 +16,7 @@ add_executable(StickPoint WIN32          # WIN32 → WinMain entry, no console
     src/gamepad.c
     src/mouse.c
     src/tray.c
+    src/StickPoint.rc                    # embeds icon into the .exe
 )
 
 target_include_directories(StickPoint PRIVATE src)

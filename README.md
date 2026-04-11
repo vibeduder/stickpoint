@@ -54,9 +54,34 @@ cmake --build build
 
 The binary is placed at `build/Release/StickPoint.exe` (MSVC) or `build/StickPoint.exe` (MinGW).
 
+## Creating an installer
+
+The project ships an [Inno Setup](https://jrsoftware.org/isinfo.php) script (`installer.iss`) that produces a self-contained `StickPoint-Setup.exe`.
+
+**Prerequisites:** [Inno Setup 6](https://jrsoftware.org/isdl.php) installed on Windows.
+
+1. Build the Release executable (see [Building](#building) above).
+2. Compile the installer:
+
+```bat
+:: Using the Inno Setup GUI — open installer.iss and press Ctrl+F9
+
+:: Or from the command line
+"C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer.iss
+```
+
+The installer is written to `Output\StickPoint-Setup.exe`.
+
+**What the installer does:**
+- Installs `StickPoint.exe` to `%ProgramFiles%\StickPoint`
+- Creates a Start Menu shortcut
+- Optionally registers StickPoint to run at Windows startup (checked by default)
+- Creates an entry in *Add or Remove Programs* for clean uninstallation
+- Offers to launch StickPoint immediately after installation
+
 ## Running
 
-Double-click `StickPoint.exe`. No window appears — it runs silently in the background. Terminate it from Task Manager or by pressing Ctrl+C in a terminal.
+Double-click `StickPoint.exe`. The app runs silently in the background with a tray icon — no console window appears. Left-click the tray icon to open the status popup; right-click for the Exit option.
 
 ## Configuration
 
