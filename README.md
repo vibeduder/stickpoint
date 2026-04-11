@@ -4,6 +4,8 @@ Use a gamepad as a mouse on Windows 10+.
 
 Hold the **Guide button** (Xbox logo / PS button / Home) then press **A** to toggle mouse mode. In mouse mode the left thumbstick moves the cursor and the face buttons trigger clicks. Press the same combo again to return to normal.
 
+![StickPoint screenshot](screenshots/main.png)
+
 ## Controls
 
 ### Activating mouse mode
