@@ -15,6 +15,7 @@ add_executable(StickPoint WIN32          # WIN32 → WinMain entry, no console
     src/main.c
     src/gamepad.c
     src/mouse.c
+    src/tray.c
 )
 
 target_include_directories(StickPoint PRIVATE src)
@@ -23,6 +24,7 @@ target_include_directories(StickPoint PRIVATE src)
 target_link_libraries(StickPoint PRIVATE
     xinput
     user32
+    shell32
 )
 
 # ---- compiler warnings ----------------------------------------------------

@@ -16,6 +16,7 @@
 #include "config.h"
 #include "gamepad.h"
 #include "mouse.h"
+#include "tray.h"
 
 /* ---- globals ------------------------------------------------------------ */
 
@@ -26,7 +27,10 @@ static HWND          s_hwnd    = NULL;
 
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 {
-    (void)hwnd; (void)wp; (void)lp;
+    LRESULT r = 0;
+    if (tray_handle_message(hwnd, msg, wp, lp, &r))
+        return r;
+
     if (msg == WM_DESTROY) {
         s_running = false;
         PostQuitMessage(0);
@@ -218,6 +222,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
         return 1;
     }
 
+    if (!tray_init(hInstance, s_hwnd)) {
+        MessageBoxA(NULL, "Failed to create tray icon.",
+                    "StickPoint", MB_ICONERROR | MB_OK);
+        gamepad_shutdown();
+        return 1;
+    }
+
     GamepadState state    = {0};
     DWORD        prev_tick = GetTickCount();
 
@@ -258,9 +269,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
         if (!changed && mode_before == MODE_MOUSE)
             process_mouse_mode(&state, dt);
 
+        tray_update(state.connected, gamepad_get_mode());
+
         Sleep(POLL_INTERVAL_MS);
     }
 
+    tray_shutdown();
     gamepad_shutdown();
     return 0;
 }

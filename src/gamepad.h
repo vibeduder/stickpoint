@@ -86,6 +86,9 @@ void gamepad_shutdown(void);
 /* Returns the current AppMode. */
 AppMode gamepad_get_mode(void);
 
+/* Overrides the current AppMode (e.g. from the tray UI). */
+void gamepad_set_mode(AppMode mode);
+
 /*
  * Examine the current snapshot and drive the mode state machine:
  *   - Guide + A within COMBO_TIMEOUT_MS  → toggle MODE_NORMAL ↔ MODE_MOUSE

@@ -95,6 +95,11 @@ AppMode gamepad_get_mode(void)
     return s_mode;
 }
 
+void gamepad_set_mode(AppMode mode)
+{
+    s_mode = mode;
+}
+
 bool gamepad_update_mode(GamepadState *state)
 {
     AppMode prev_mode = s_mode;
