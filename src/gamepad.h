@@ -39,6 +39,8 @@ typedef enum {
 typedef struct {
     WORD  buttons;
     WORD  prev_buttons;
+    DWORD packet_number;
+    DWORD prev_packet_number;
 
     SHORT lx, ly;
     SHORT rx, ry;
@@ -89,6 +91,9 @@ typedef struct {
 /* Load XInput DLL (XInput1_4 → XInput1_3 fallback). Returns false on failure. */
 bool gamepad_init(void);
 
+/* Register Raw Input gamepad/joystick notifications on the given window. */
+bool gamepad_register_raw_input(HWND hwnd);
+
 /* Poll all four XInput slots. Fills infos[0..XUSER_MAX_COUNT-1].
    Only .connected and .state are modified; name/image are preserved. */
 void gamepad_poll_all(GamepadInfo infos[XUSER_MAX_COUNT]);
@@ -100,6 +105,10 @@ bool gamepad_update_mode_slot(GamepadState *state, GamepadSlotState *slot);
 /* Enumerate HID devices to fill name + image path for each connected slot.
    Call at startup and on WM_DEVICECHANGE. */
 void gamepad_detect_controllers(GamepadInfo infos[XUSER_MAX_COUNT]);
+
+/* Track recent Raw Input activity so HID devices can be reconciled to XInput slots. */
+void gamepad_handle_raw_input(HRAWINPUT raw_input);
+void gamepad_reconcile_active_slot(GamepadInfo infos[XUSER_MAX_COUNT]);
 
 /* Load/save per-slot combo config from/to StickPoint.ini next to the exe. */
 void gamepad_load_config(GamepadInfo infos[XUSER_MAX_COUNT]);

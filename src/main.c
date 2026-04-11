@@ -27,6 +27,8 @@
 static volatile bool s_running = true;
 static HWND          s_hwnd    = NULL;
 
+static DWORD         s_connected_mask = 0;
+
 /* Per-slot mouse-input state (must survive frames). */
 typedef struct {
     DWORD a_release_time;
@@ -60,9 +62,18 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
     if (msg == WM_DEVICECHANGE) {
         if (wp == DBT_DEVICEARRIVAL || wp == DBT_DEVICEREMOVECOMPLETE) {
             GamepadInfo *infos = tray_get_infos();
+            /* Poll first so connected flags are current before detection runs.
+             * Without this, a newly-arrived controller still shows connected=false
+             * and gamepad_detect_controllers skips it, leaving stale defaults. */
+            gamepad_poll_all(infos);
             gamepad_detect_controllers(infos);
         }
         return 0;
+    }
+
+    if (msg == WM_INPUT) {
+        gamepad_handle_raw_input((HRAWINPUT)lp);
+        return DefWindowProcA(hwnd, msg, wp, lp);
     }
 
     return DefWindowProcA(hwnd, msg, wp, lp);
@@ -185,6 +196,18 @@ static void process_mouse_mode(const GamepadState *state, float dt,
     }
 }
 
+static DWORD get_connected_mask(const GamepadInfo infos[XUSER_MAX_COUNT])
+{
+    DWORD mask = 0;
+
+    for (int i = 0; i < XUSER_MAX_COUNT; i++) {
+        if (infos[i].connected)
+            mask |= (1u << i);
+    }
+
+    return mask;
+}
+
 /* ---- entry point -------------------------------------------------------- */
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
@@ -215,6 +238,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
         return 1;
     }
 
+    gamepad_register_raw_input(s_hwnd);
+
     /* Initialise all slots with default combo config. */
     GamepadInfo *infos = tray_get_infos();
     for (int i = 0; i < XUSER_MAX_COUNT; i++) {
@@ -225,8 +250,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     }
     gamepad_load_config(infos);
 
+    /* Poll once so connected flags are set before detect runs. */
+    gamepad_poll_all(infos);
+
     /* Initial controller name/image detection. */
     gamepad_detect_controllers(infos);
+    s_connected_mask = get_connected_mask(infos);
 
     DWORD prev_tick = GetTickCount();
 
@@ -251,6 +280,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
         /* Poll all four XInput slots. */
         gamepad_poll_all(infos);
+
+        DWORD connected_mask = get_connected_mask(infos);
+        if (connected_mask != s_connected_mask) {
+            gamepad_detect_controllers(infos);
+            s_connected_mask = connected_mask;
+        }
+
+        gamepad_reconcile_active_slot(infos);
 
         /* Per-slot: mode FSM + mouse injection. */
         for (int i = 0; i < XUSER_MAX_COUNT; i++) {

@@ -55,6 +55,17 @@ else()
     )
 endif()
 
+# ---- Copy assets to output directory --------------------------------------
+#
+# The assets folder must sit next to the exe so build_image_path() finds it.
+#
+add_custom_command(TARGET StickPoint POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_SOURCE_DIR}/assets"
+        "$<TARGET_FILE_DIR:StickPoint>/assets"
+    COMMENT "Copying assets to output directory"
+)
+
 # ---- DPI manifest (Windows 10+) ------------------------------------------
 #
 # SetProcessDPIAware() in main.c covers the runtime side.
