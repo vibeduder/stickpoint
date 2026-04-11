@@ -66,10 +66,7 @@ The project ships an [Inno Setup](https://jrsoftware.org/isinfo.php) script (`in
 2. Compile the installer:
 
 ```bat
-:: Using the Inno Setup GUI — open installer.iss and press Ctrl+F9
-
-:: Or from the command line
-"C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer.iss
+./build_installer.bat
 ```
 
 The installer is written to `Output\StickPoint-Setup.exe`.
@@ -84,6 +81,10 @@ The installer is written to `Output\StickPoint-Setup.exe`.
 ## Running
 
 Double-click `StickPoint.exe`. The app runs silently in the background with a tray icon — no console window appears. Left-click the tray icon to open the status popup; right-click for the Exit option.
+
+## Troubleshooting
+
+If pressing the controller **Guide button** opens the Xbox Game Bar instead of reaching StickPoint, disable that shortcut in Windows under **Settings > Gaming > Xbox Game Bar**, then turn off the option that opens Xbox Game Bar from the controller.
 
 ## Configuration
 
@@ -107,7 +108,6 @@ StickPoint loads `XInput1_4.dll` at runtime and binds to **`XInputGetStateEx`** 
 
 ## Limitations
 
-- Only controller slot 0 is polled.
 - PlayStation and other non-XInput controllers are not supported unless a compatibility layer (e.g. DS4Windows, Steam Input) presents them as XInput devices.
 - The Guide button requires `XInput1_4.dll`. On systems with only `XInput1_3.dll` (Windows 7), StickPoint still runs but the Guide button is not detected; the fallback is to use a different combo (extend `gamepad_update_mode` in `src/gamepad.c`).
 
