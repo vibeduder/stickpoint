@@ -3,17 +3,22 @@
 #include <windows.h>
 #include <stdbool.h>
 
-#include "gamepad.h"   /* AppMode */
+#include "gamepad.h"   /* GamepadInfo, XUSER_MAX_COUNT */
 
 /*
- * StickPoint — system tray icon and popup status window
+ * StickPoint — system tray icon and main status window
  *
- * tray_init        Register the tray icon and create (hidden) the popup window.
- *                  hwnd_msg is the message-only window whose WndProc receives
- *                  the WM_TRAYICON callback and WM_COMMAND menu events.
+ * tray_init        Register the tray icon and create (hidden) the main window.
+ *                  hwnd_msg is the message-only window that receives WM_TRAYICON
+ *                  and WM_COMMAND menu events.
  *
- * tray_update      Refresh the tray tooltip and popup labels to reflect the
- *                  current controller state.  Call once per polling frame.
+ * tray_update_gamepads
+ *                  Refresh the main window contents to reflect the current state
+ *                  of all four XInput slots.  Call once per polling frame.
+ *                  infos must point to an array of XUSER_MAX_COUNT entries.
+ *
+ * tray_get_infos   Return a pointer to the internal cached GamepadInfo array so
+ *                  the options dialog can mutate slot_state and save config.
  *
  * tray_shutdown    Remove the tray icon.  Call before process exit.
  *
@@ -23,8 +28,9 @@
  *                  consumed; otherwise returns false.
  */
 
-bool    tray_init(HINSTANCE hInst, HWND hwnd_msg);
-void    tray_update(bool connected, AppMode mode);
-void    tray_shutdown(void);
-bool    tray_handle_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
-                            LRESULT *out);
+bool          tray_init(HINSTANCE hInst, HWND hwnd_msg);
+void          tray_update_gamepads(const GamepadInfo infos[XUSER_MAX_COUNT]);
+GamepadInfo  *tray_get_infos(void);
+void          tray_shutdown(void);
+bool          tray_handle_message(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
+                                  LRESULT *out);

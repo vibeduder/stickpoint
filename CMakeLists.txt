@@ -22,10 +22,18 @@ add_executable(StickPoint WIN32          # WIN32 → WinMain entry, no console
 target_include_directories(StickPoint PRIVATE src)
 
 # xinput and user32 are available on every Windows installation.
+# ole32 + windowscodecs: COM + WIC (PNG loading in tray.c)
+# setupapi + hid:        HID device enumeration for controller name/image detection
+# msimg32:               AlphaBlend for PNG rendering with transparency
 target_link_libraries(StickPoint PRIVATE
     xinput
     user32
     shell32
+    ole32
+    windowscodecs
+    setupapi
+    hid
+    msimg32
 )
 
 # ---- compiler warnings ----------------------------------------------------

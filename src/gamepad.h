@@ -7,9 +7,8 @@
 /*
  * StickPoint — gamepad input layer (XInput wrapper)
  *
- * The Guide/Home button is not exposed by the public XInput headers.
- * We access it via XInputGetStateEx (ordinal 100) from XInput1_4.dll,
- * which extends XINPUT_STATE with a Guide-button flag.
+ * Supports all four XInput slots simultaneously.
+ * The Guide/Home button is accessed via XInputGetStateEx (ordinal 100).
  */
 
 /* Guide/Home button bit — not present in public <xinput.h>. */
@@ -23,7 +22,7 @@
  */
 typedef struct {
     DWORD          dwPacketNumber;
-    XINPUT_GAMEPAD Gamepad;         /* wButtons includes XINPUT_GAMEPAD_GUIDE */
+    XINPUT_GAMEPAD Gamepad;
 } XINPUT_STATE_EX;
 
 /* -------------------------------------------------------------------------
@@ -38,63 +37,73 @@ typedef enum {
  * Per-frame gamepad snapshot
  * ------------------------------------------------------------------------- */
 typedef struct {
-    /* Current and previous button bitmasks for edge detection. */
     WORD  buttons;
     WORD  prev_buttons;
 
-    /* Thumb-stick axes (-32768 … 32767). */
     SHORT lx, ly;
     SHORT rx, ry;
 
-    /* Triggers (0 … 255). */
     BYTE  lt,      rt;
     BYTE  prev_lt, prev_rt;
 
-    /* GetTickCount() value at the time this snapshot was taken. */
     DWORD timestamp_ms;
-
     bool  connected;
 } GamepadState;
 
 /* -------------------------------------------------------------------------
- * Convenience edge macros (operate on a GamepadState *s)
+ * Convenience edge macros
  * ------------------------------------------------------------------------- */
 #define GP_JUST_PRESSED(s, btn)  ( ((s)->buttons & ~(s)->prev_buttons) & (btn) )
 #define GP_JUST_RELEASED(s, btn) ( (~(s)->buttons & (s)->prev_buttons) & (btn) )
 #define GP_HELD(s, btn)          ( ((s)->buttons  &  (s)->prev_buttons) & (btn) )
 
 /* -------------------------------------------------------------------------
+ * Per-slot mode state machine + configurable combo
+ * ------------------------------------------------------------------------- */
+typedef struct {
+    AppMode mode;
+    DWORD   guide_down_time;
+    bool    guide_active;
+    bool    guide_combo_armed;
+    WORD    combo_hold_btn;    /* button to hold  (default: XINPUT_GAMEPAD_GUIDE) */
+    WORD    combo_press_btn;   /* button to press (default: XINPUT_GAMEPAD_A)     */
+    DWORD   combo_timeout_ms;  /* window in ms    (default: COMBO_TIMEOUT_MS)     */
+} GamepadSlotState;
+
+/* -------------------------------------------------------------------------
+ * All information about one controller (used by the UI)
+ * ------------------------------------------------------------------------- */
+typedef struct {
+    int              slot;           /* 0–3 XInput slot index                */
+    bool             connected;
+    GamepadState     state;          /* raw per-frame snapshot               */
+    GamepadSlotState slot_state;     /* mode FSM + configurable combo        */
+    char             name[256];      /* product string or "Controller N"     */
+    wchar_t          image[MAX_PATH];/* absolute path to PNG                 */
+} GamepadInfo;
+
+/* -------------------------------------------------------------------------
  * API
  * ------------------------------------------------------------------------- */
 
-/*
- * Load XInput at runtime (tries XInput1_4.dll first, then XInput1_3.dll).
- * Returns false if no XInput DLL is found.
- */
+/* Load XInput DLL (XInput1_4 → XInput1_3 fallback). Returns false on failure. */
 bool gamepad_init(void);
 
-/*
- * Poll controller slot 0.
- * Fills *state and returns true if a controller is connected; otherwise
- * sets state->connected = false and returns false.
- */
-bool gamepad_poll(GamepadState *state);
+/* Poll all four XInput slots. Fills infos[0..XUSER_MAX_COUNT-1].
+   Only .connected and .state are modified; name/image are preserved. */
+void gamepad_poll_all(GamepadInfo infos[XUSER_MAX_COUNT]);
 
-/* Release the XInput DLL handle. */
+/* Per-slot mode state machine.
+   Returns true if the mode changed this frame (skip mouse events that frame). */
+bool gamepad_update_mode_slot(GamepadState *state, GamepadSlotState *slot);
+
+/* Enumerate HID devices to fill name + image path for each connected slot.
+   Call at startup and on WM_DEVICECHANGE. */
+void gamepad_detect_controllers(GamepadInfo infos[XUSER_MAX_COUNT]);
+
+/* Load/save per-slot combo config from/to StickPoint.ini next to the exe. */
+void gamepad_load_config(GamepadInfo infos[XUSER_MAX_COUNT]);
+void gamepad_save_config(const GamepadInfo infos[XUSER_MAX_COUNT]);
+
+/* Release the XInput DLL. */
 void gamepad_shutdown(void);
-
-/* Returns the current AppMode. */
-AppMode gamepad_get_mode(void);
-
-/* Overrides the current AppMode (e.g. from the tray UI). */
-void gamepad_set_mode(AppMode mode);
-
-/*
- * Examine the current snapshot and drive the mode state machine:
- *   - Guide + A within COMBO_TIMEOUT_MS  → toggle MODE_NORMAL ↔ MODE_MOUSE
- *   - Guide held alone ≥ GUIDE_HOLD_EXIT_MS → force MODE_NORMAL
- *
- * Returns true if the mode changed this frame (caller should skip
- * processing button events that frame to avoid spurious clicks).
- */
-bool gamepad_update_mode(GamepadState *state);
