@@ -15,6 +15,7 @@
 #include <windows.h>
 #include <shellapi.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "tray.h"
