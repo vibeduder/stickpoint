@@ -59,8 +59,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 ; "Run at startup" is checked by default — sensible for a tray utility.
 Name: "startup"; \
     Description: "Start {#AppName} automatically when Windows starts"; \
-    GroupDescription: "Additional tasks:"; \
-    Flags: checked
+    GroupDescription: "Additional tasks:"
 
 ; ---- files ----------------------------------------------------------------
 
