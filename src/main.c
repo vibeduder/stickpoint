@@ -27,7 +27,8 @@
 static volatile bool s_running = true;
 static HWND          s_hwnd    = NULL;
 
-static DWORD         s_connected_mask = 0;
+static DWORD         s_connected_mask  = 0;
+static bool          s_detect_pending  = false;
 
 /* Per-slot mouse-input state (must survive frames). */
 typedef struct {
@@ -60,14 +61,8 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
      * is added or removed (covers plug-in after startup).
      */
     if (msg == WM_DEVICECHANGE) {
-        if (wp == DBT_DEVICEARRIVAL || wp == DBT_DEVICEREMOVECOMPLETE) {
-            GamepadInfo *infos = tray_get_infos();
-            /* Poll first so connected flags are current before detection runs.
-             * Without this, a newly-arrived controller still shows connected=false
-             * and gamepad_detect_controllers skips it, leaving stale defaults. */
-            gamepad_poll_all(infos);
-            gamepad_detect_controllers(infos);
-        }
+        if (wp == DBT_DEVICEARRIVAL || wp == DBT_DEVICEREMOVECOMPLETE)
+            s_detect_pending = true;
         return 0;
     }
 
@@ -282,7 +277,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
         gamepad_poll_all(infos);
 
         DWORD connected_mask = get_connected_mask(infos);
-        if (connected_mask != s_connected_mask) {
+        if (s_detect_pending || connected_mask != s_connected_mask) {
+            s_detect_pending = false;
             gamepad_detect_controllers(infos);
             s_connected_mask = connected_mask;
         }
