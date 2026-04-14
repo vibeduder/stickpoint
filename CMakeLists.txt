@@ -1,28 +1,28 @@
 cmake_minimum_required(VERSION 3.20)
-project(StickPoint C)
+project(StickPoint CXX)
 
 # Windows 10+ only
 if(NOT WIN32)
     message(FATAL_ERROR "StickPoint targets Windows only.")
 endif()
 
-set(CMAKE_C_STANDARD 11)
-set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # ---- executable -----------------------------------------------------------
 
 add_executable(StickPoint WIN32          # WIN32 → WinMain entry, no console
-    src/main.c
-    src/gamepad.c
-    src/mouse.c
-    src/tray.c
+    src/main.cpp
+    src/gamepad.cpp
+    src/mouse.cpp
+    src/tray.cpp
     src/StickPoint.rc                    # embeds icon into the .exe
 )
 
 target_include_directories(StickPoint PRIVATE src)
 
 # xinput and user32 are available on every Windows installation.
-# ole32 + windowscodecs: COM + WIC (PNG loading in tray.c)
+# ole32 + windowscodecs: COM + WIC (PNG loading in tray.cpp)
 # setupapi + hid:        HID device enumeration for controller name/image detection
 # msimg32:               AlphaBlend for PNG rendering with transparency
 target_link_libraries(StickPoint PRIVATE
@@ -68,7 +68,7 @@ add_custom_command(TARGET StickPoint POST_BUILD
 
 # ---- DPI manifest (Windows 10+) ------------------------------------------
 #
-# SetProcessDPIAware() in main.c covers the runtime side.
+# SetProcessDPIAware() in main.cpp covers the runtime side.
 # The manifest below sets the per-monitor DPI-aware level so the OS does
 # not virtualise coordinates for SendInput on multi-monitor setups.
 #

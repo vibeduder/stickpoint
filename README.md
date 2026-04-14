@@ -109,7 +109,7 @@ StickPoint loads `XInput1_4.dll` at runtime and binds to **`XInputGetStateEx`** 
 ## Limitations
 
 - PlayStation and other non-XInput controllers are not supported unless a compatibility layer (e.g. DS4Windows, Steam Input) presents them as XInput devices.
-- The Guide button requires `XInput1_4.dll`. On systems with only `XInput1_3.dll` (Windows 7), StickPoint still runs but the Guide button is not detected; the fallback is to use a different combo (extend `gamepad_update_mode` in `src/gamepad.c`).
+- The Guide button requires `XInput1_4.dll`. On systems with only `XInput1_3.dll` (Windows 7), StickPoint still runs but the Guide button is not detected; the fallback is to use a different combo (extend `gamepad_update_mode` in `src/gamepad.cpp`).
 
 ## License
 

@@ -13,7 +13,7 @@
 ; ---- application metadata -------------------------------------------------
 
 #define AppName    "StickPoint"
-#define AppVersion "1.0"
+#define AppVersion "1.1"
 #define AppExe     "StickPoint.exe"
 #define AppBin     "build\Release\" + AppExe
 
